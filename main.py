@@ -157,6 +157,97 @@ def is_nighttime(sunrise_sunset_data):
         return now > sunset and now < sunrise
 
 
+# Main App
+def main():
+    # Header
+    st.markdown("""
+    <div class="main-header">
+        <h1>🛰️ International Space Station</h1>
+        <h2>Real-Time Tracking Dashboard</h2>
+        <p>Live position, astronaut info, and visibility predictions</p>
+    </div>
+    """, unsafe_allow_html=True)
 
+    # Sidebar for user location
+    st.sidebar.header("📍 Your Location")
+
+    # Default to my location in Mobile, AL
+    user_lat = st.sidebar.number_input("Latitude", value=30.673290, format="%.6f")
+    user_lng = st.sidebar.number_input("Longitude", value=-88.111153, format="%.6f")
+    
+    # Add some preset locations
+    preset_locations = {
+        "Mobile, AL": (30.673290, -88.111153),
+        "New York City": (40.7128, -74.0060),
+        "Los Angeles": (34.0522, -118.2437),
+        "London": (51.5074, -0.1278),
+        "Tokyo": (35.6762, 139.6503),
+        "Sydney": (-33.8688, 151.2093)
+    }
+
+    selected_location = st.sidebar.selectbox("Or choose a preset:", list(preset_locations.keys()))
+    if st.sidebar.button("Use Preset Location"):
+        user_lat, user_lng = preset_locations[selected_location]
+        st.rerun()
+    
+    # Auto-refresh toggle
+    auto_refresh = st.sidebar.checkbox("Auto-refresh (60s)", value=True)
+
+    if auto_refresh:
+        # Auto-refresh every 60 seconds
+        time.sleep(1)
+        st.rerun()
+    
+    # Manual refresh button
+    if st.sidebar.button("Refresh Now"):
+        st.cache_data.clear()
+        st.rerun()
+    
+    # Get ISS Data
+    iss_location = get_iss_location()
+    astronaut_data = get_astronauts()
+
+    if not iss_location:
+        st.error("Unable to fetch ISS data. Please check your connection and try again.")
+        return
+    
+    # Current ISS Status
+    col1, col2, col3, col4 = st.columns(4)
+
+    with col1:
+        st.metric(
+            label="Latitude",
+            value=f"{iss_location['latitude']:.4f}°",
+            help="Current ISS latitude position"
+        )
+    
+    with col2:
+        st.metric(
+            label="Longitude",
+            value=f"{iss_location['longitude']:.4f}°",
+            help="Current ISS longitude position"
+        )
+    
+    with col3:
+        if astronaut_data:
+            st.metric(
+                label="Astronauts",
+                value=astronaut_data['count'],
+                help="People currently aboard the ISS"
+            )
+        else:
+            st.metric(label="Astronauts", value="Error")
+    
+    with col4:
+        # Calculate distance from user
+        distance = math.sqrt((iss_location['latitude'] - user_lat)**2 + (iss_location['longitude'] - user_lng)**2)
+
+        st.metric(
+            label="Distance",
+            value=f"{distance:.1f}°",
+            help="Angular distance from your location"
+        )
+    
+    
 
 
