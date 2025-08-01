@@ -280,6 +280,58 @@ def main():
 
     st.plotly_chart(fig, use_container_width=True)
 
+    # Visibility Check
+    st.subheader("Visibility Status")
+
+    # Get sunrise/sunset data
+    sun_data = get_sunrise_sunset(user_lat, user_lng)
+    is_nearby = is_iss_nearby(iss_location['latitude'], iss_location['longitude'],
+                              user_lat, user_lng)
+    is_dark = is_nighttime(sun_data) if sun_data else False
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if is_nearby:
+            st.success("🎯 ISS is nearby! (±5° from your location)")
+        else:
+            st.info("🌍 ISS is not currently nearby")
+        
+        if is_dark:
+            st.success("🌙 It's dark at your location")
+        else:
+            st.info("☀️ It's daylight at your location")
+    
+    with col2:
+        if is_nearby and is_dark:
+            st.success("🔭 **LOOK UP! ISS might be visible!**")
+        else:
+            st.info("⏳ ISS not currently visible from your location")
+        
+        if sun_data:
+            st.write(f"Sunrise: {sun_data['sunrise'].strftime('%I:%M %p')}")
+            st.write(f"Sunset: {sun_data['sunset'].strftime('%I:%M %p')}")
+    
+    # Upcoming passes
+    st.subheader("Upcoming ISS Passes")
+
+    passes = get_iss_passes(user_lat, user_lng)
+    if passes:
+        pass_data = []
+        for i, pass_info in enumerate(passes):
+            pass_data.append({
+                "Pass #": i + 1,
+                "Date": pass_info['date'].strftime('%Y-%m-%d'),
+                "Time": pass_info['date'].strftime('%I:%M %p'),
+                "Duration": f"{pass_info['duration'] // 60}m {pass_info['duration'] % 60}s",
+                "Days Away": (pass_info['date'].date() - datetime.now().date()).days
+            })
+        
+        df_passes = pd.DataFrame(pass_data)
+        st.dataframe(df_passes, use_container_width=True)
+    else:
+        st.warning("Unable to fetch pass prediction data")
+    
     
 
 
