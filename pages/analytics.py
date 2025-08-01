@@ -338,3 +338,66 @@ def main():
             )
             st.plotly_chart(fig_activity, use_container_width=True)
     
+    # Performance Summary
+    st.header("Performance Summary")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("""
+        <div class="metric-card">
+            <h4>🔋 Power Systems</h4>
+            <p><strong>Avg Generation:</strong> {:.1f} kW</p>
+            <p><strong>Peak Efficiency:</strong> {:.1f}%</p>
+            <p><strong>Status:</strong> <span style="color: green;">Optimal</span></p>
+        </div>
+        """.format(
+            hist_data['power_generation_kw'].mean(),
+            hist_data['solar_panel_efficiency'].max()
+        ), unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="metric-card">
+            <h4>🛰️ Orbital Stability</h4>
+            <p><strong>Avg Altitude:</strong> {:.1f} km</p>
+            <p><strong>Velocity Range:</strong> {:.0f} km/h</p>
+            <p><strong>Status:</strong> <span style="color: green;">Stable</span></p>
+        </div>
+        """.format(
+            hist_data['altitude_km'].mean(),
+            hist_data['velocity_kmh'].std()
+        ), unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div class="metric-card">
+            <h4>📡 Communications</h4>
+            <p><strong>Avg Signal:</strong> {:.1f}%</p>
+            <p><strong>Uptime:</strong> 99.2%</p>
+            <p><strong>Status:</strong> <span style="color: green;">Excellent</span></p>
+        </div>
+        """.format(
+            hist_data['communication_strength'].mean()
+        ), unsafe_allow_html=True)
+
+    # Technical Details
+    with st.expander("🔧 Technical Implementation Details"):
+        st.write("**Data Processing:**")
+        st.write("• Real-time ISS position from Open Notify API")
+        st.write("• Orbital mechanics calculations using simplified Kepler equations")
+        st.write("• Historical data simulation for demonstration purposes")
+        st.write("")
+        st.write("**Analytics Features:**")
+        st.write("• Predictive orbital path modeling")
+        st.write("• Power generation trend analysis")
+        st.write("• Communication signal strength tracking")
+        st.write("• Crew activity pattern recognition")
+        st.write("")
+        st.write("**Visualization Technologies:**")
+        st.write("• Plotly for interactive charts and maps")
+        st.write("• Streamlit for responsive web interface")
+        st.write("• Pandas for data manipulation and analysis")
+
+if __name__ == "__main__":
+    main()
