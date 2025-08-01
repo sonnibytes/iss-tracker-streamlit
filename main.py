@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+import requests
 import time
 import math
 import json
@@ -48,3 +49,91 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+
+# ISS API functions
+@st.cache_data(ttl=60)  # Cache for 1min
+def get_iss_location():
+    """Get current position of ISS"""
+    try:
+        response = requests.get("http://api.open-notify.org/iss-now.json", timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        return {
+            'latitude': float(data['iss_position']['latitude']),
+            'longitude': float(data['iss_position']['longitude']),
+            'timestamp': datetime.fromtimestamp(data['timestamp'])
+        }
+    except Exception as e:
+        st.error(f"Error fetching ISS location: {e}")
+        return None
+
+@st.cache_data(ttl=3600)  # Cache for 1h
+def get_astronauts():
+    """Get current astronauts in space"""
+    try:
+        response = requests.get("http://api.open-notify.org/astros.json", timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        return {
+            'count': data['number'],
+            'astronauts': data['people']
+        }
+    except Exception as e:
+        st.error(f"Error fetching astronaut data: {e}")
+        return None
+
+
+@st.cache_data(ttl=3600)  # Cache for 1h
+def get_iss_passes(lat, lng, alt=0, n=5):
+    """Get upcoming ISS passes for a location"""
+    try:
+        url = "http://api.open-notify.org/iss-pass.json"
+        params = {
+            'lat': lat,
+            'lon': lng,
+            'alt': alt,
+            'n': n
+        }
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        passes = []
+        for pass_info in data['response']:
+            passes.append({
+                'date': datetime.fromtimestamp(pass_info['risetime']),
+                'duration': pass_info['duration']
+            })
+
+        return passes
+    except Exception as e:
+        st.error(f"Error fetching pass data: {e}")
+        return []
+
+
+def get_sunrise_sunset(lat, lng):
+    """Get sunrise/sunset times for location"""
+    try:
+        params = {
+            "lat": lat,
+            "lng": lng,
+            "formatted": 0,
+        }
+        response = requests.get("https://api.sunrise-sunset.org/json", params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        return {
+            'sunrise': datetime.fromisoformat(data['results']['sunrise'].replace('Z', '+00:00')),
+            'sunset': datetime.fromisoformat(data['results']['sunset'].replace('Z', '+00:00'))
+        }
+    except Exception as e:
+        st.error(f"Error fetching sunrise/sunset data: {e}")
+        return None
+
+
+
+
