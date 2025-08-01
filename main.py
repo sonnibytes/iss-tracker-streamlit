@@ -332,6 +332,33 @@ def main():
     else:
         st.warning("Unable to fetch pass prediction data")
     
-    
+    # Current Astronauts
+    if astronaut_data and astronaut_data['astronauts']:
+        st.subheader("Current Space Crew")
 
+        astronaut_df = pd.DataFrame(astronaut_data['astronauts'])
 
+        # Group by spacecraft
+        spacecraft_groups = astronaut_df.groupby('craft')
+
+        for spacecraft, group in spacecraft_groups:
+            st.write(f"**{spacecraft}:**")
+            for _, astronaut in group.iterrows():
+                st.write(f"• {astronaut['name']}")
+
+    # Technical Details
+    with st.expander("Technical Information"):
+        st.write("**Data Sources:**")
+        st.write("• ISS Position: Open Notify API")
+        st.write("• Sunrise/Sunset: Sunrise-Sunset API")
+        st.write("• Astronaut Data: Open Notify API")
+        st.write("")
+        st.write("**Update Frequency:**")
+        st.write("• ISS Position: Every 60 seconds")
+        st.write("• Astronaut Data: Every hour")
+        st.write("• Pass Predictions: Every hour")
+        st.write("")
+        st.write(f"**Last Updated:** {iss_location['timestamp'].strftime('%Y-%m-%d %H:%M:%S UTC')}")
+
+if __name__ == "__main__":
+    main()
