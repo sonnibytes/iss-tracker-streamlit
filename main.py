@@ -10,7 +10,7 @@ import json
 
 # Page config
 st.set_page_config(
-    page_title="🛰️ ISS Real-Time Tracker",
+    page_title="ISS Real-Time Tracker",
     page_icon="🛰️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -52,7 +52,7 @@ st.markdown("""
 
 
 # ISS API functions
-@st.cache_data(ttl=60)  # Cache for 1min
+@st.cache_data(ttl=60, show_spinner=False)  # Cache for 1min
 def get_iss_location():
     """Get current position of ISS"""
     try:
@@ -60,16 +60,19 @@ def get_iss_location():
         response.raise_for_status()
         data = response.json()
 
+        # DEBUG
+        print(data)
+
         return {
-            'latitude': float(data['iss_position']['latitude']),
-            'longitude': float(data['iss_position']['longitude']),
-            'timestamp': datetime.fromtimestamp(data['timestamp'])
+            'latitude': float(data["iss_position"]["latitude"]),
+            'longitude': float(data["iss_position"]["longitude"]),
+            'timestamp': datetime.fromtimestamp(data["timestamp"])
         }
     except Exception as e:
         st.error(f"Error fetching ISS location: {e}")
         return None
 
-@st.cache_data(ttl=3600)  # Cache for 1h
+@st.cache_data(ttl=3600, show_spinner=False)  # Cache for 1h
 def get_astronauts():
     """Get current astronauts in space"""
     try:
@@ -86,7 +89,7 @@ def get_astronauts():
         return None
 
 
-@st.cache_data(ttl=3600)  # Cache for 1h
+@st.cache_data(ttl=3600, show_spinner=False)  # Cache for 1h
 def get_iss_passes(lat, lng, alt=0, n=5):
     """Get upcoming ISS passes for a location"""
     try:
@@ -127,8 +130,8 @@ def get_sunrise_sunset(lat, lng):
         data = response.json()
 
         return {
-            'sunrise': datetime.fromisoformat(data['results']['sunrise'].replace('Z', '+00:00')),
-            'sunset': datetime.fromisoformat(data['results']['sunset'].replace('Z', '+00:00'))
+            'sunrise': datetime.fromisoformat(data["results"]["sunrise"].replace('Z', '+00:00')),
+            'sunset': datetime.fromisoformat(data["results"]["sunset"].replace('Z', '+00:00'))
         }
     except Exception as e:
         st.error(f"Error fetching sunrise/sunset data: {e}")
@@ -191,11 +194,19 @@ def main():
         st.rerun()
     
     # Auto-refresh toggle
-    auto_refresh = st.sidebar.checkbox("Auto-refresh (60s)", value=True)
-
-    if auto_refresh:
-        # Auto-refresh every 60 seconds
-        time.sleep(1)
+    auto_refresh = st.sidebar.checkbox("Auto-refresh (60s)", value=False)  # Default to False
+    
+    # Show last update time
+    if 'last_update' not in st.session_state:
+        st.session_state.last_update = datetime.now()
+    
+    time_since_update = (datetime.now() - st.session_state.last_update).total_seconds()
+    st.sidebar.write(f"Last updated: {int(time_since_update)}s ago")
+    
+    # Auto-refresh logic (only if enabled and enough time has passed)
+    if auto_refresh and time_since_update >= 60:
+        st.session_state.last_update = datetime.now()
+        st.cache_data.clear()
         st.rerun()
     
     # Manual refresh button
@@ -203,9 +214,10 @@ def main():
         st.cache_data.clear()
         st.rerun()
     
-    # Get ISS Data
-    iss_location = get_iss_location()
-    astronaut_data = get_astronauts()
+    with st.spinner("Fetching ISS Data..."):
+        # Get ISS Data
+        iss_location = get_iss_location()
+        astronaut_data = get_astronauts()
 
     if not iss_location:
         st.error("Unable to fetch ISS data. Please check your connection and try again.")
@@ -260,25 +272,27 @@ def main():
     })
 
     # Create plotly map
-    fig = px.scatter_mapbox(
-        map_data,
-        lat="lat",
-        lon='"lon',
+    fig = px.scatter_map(
+        map_data, 
+        lat="lat", 
+        lon="lon", 
         hover_name="name",
         size="size",
         zoom=1,
-        mapbox_style="open-street-map",
+        # mapbox_style="open-street-map",
         height=400
     )
 
     fig.update_layout(
-        margin={"r":0, "t":0, "l":0, "b":0},
+        margin={"r":0, "t":0, "l":0, "b":30},
         mapbox=dict(
             center=dict(lat=iss_location['latitude'], lon=iss_location['longitude'])
         )
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
+    st.divider()
 
     # Visibility Check
     st.subheader("Visibility Status")
@@ -320,11 +334,11 @@ def main():
         pass_data = []
         for i, pass_info in enumerate(passes):
             pass_data.append({
-                "Pass #": i + 1,
-                "Date": pass_info['date'].strftime('%Y-%m-%d'),
-                "Time": pass_info['date'].strftime('%I:%M %p'),
-                "Duration": f"{pass_info['duration'] // 60}m {pass_info['duration'] % 60}s",
-                "Days Away": (pass_info['date'].date() - datetime.now().date()).days
+                'Pass #': i + 1,
+                'Date': pass_info['date'].strftime('%Y-%m-%d'),
+                'Time': pass_info['date'].strftime('%I:%M %p'),
+                'Duration': f"{pass_info['duration'] // 60}m {pass_info['duration'] % 60}s",
+                'Days Away': (pass_info['date'].date() - datetime.now().date()).days
             })
         
         df_passes = pd.DataFrame(pass_data)

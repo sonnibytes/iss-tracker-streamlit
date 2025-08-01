@@ -10,7 +10,7 @@ import json
 
 
 st.set_page_config(
-    page_title="📊 ISS Analytics",
+    page_title="ISS Analytics",
     page_icon="📊",
     layout="wide"
 )
@@ -47,7 +47,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Simulated ISS orbital data functions
-@st.cache_data(ttl=300)  # Cache for 5m
+@st.cache_data(ttl=300, show_spinner=False)  # Cache for 5m
 def get_extended_iss_data():
     """Get ISS data w simulated orbital params"""
     try:
@@ -96,7 +96,7 @@ def generate_orbital_path(current_lat, current_lng, hours_ahead=2):
         
         # Simulate latitude oscillation (between +51.6 and -51.6 degrees)
         lat_amplitude = 51.6
-        lat_frequency = 2 + np.pi / orbital_period_hours
+        lat_frequency = 2 * np.pi / orbital_period_hours
         new_lat = lat_amplitude * np.sin(lat_frequency * time_offset)
 
         path_points.append({
@@ -116,7 +116,7 @@ def generate_historical_data(days_back=7):
     dates = pd.date_range(
         start=datetime.now() - timedelta(days=days_back),
         end=datetime.now(),
-        freq='H'
+        freq='h'
     )
 
     historical_data = []
@@ -145,16 +145,17 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # Get current ISS data
-    iss_data = get_extended_iss_data()
+    with st.spinner("Fetching ISS Data.."):
+        # Get current ISS data
+        iss_data = get_extended_iss_data()
 
     if not iss_data:
         st.error("Unable to fetch ISS data for analytics")
         return
     
     # Real-time Orbital Metrics
-    st.header("Unable to fetch ISS data for analytics")
-
+    st.header("🛰️ Real-Time Orbital Metrics")
+    
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
@@ -250,15 +251,15 @@ def main():
             )
 
             st.plotly_chart(fig, use_container_width=True)
-        
-    # Historical Performance Metrics
-    st.header("Historical Performance Analytics")
-
-    # Generate Historical Data
+    
+    # Historical Performance Analytics
+    st.header("📈 Historical Performance Analytics")
+    
+    # Generate historical data
     hist_data = generate_historical_data(days_back=7)
-
-    tab1, tab2, tab3 = st.tabs(["Power Systems", "Orbital Parameters", "Communications"])
-
+    
+    tab1, tab2, tab3 = st.tabs(["🔋 Power Systems", "🛰️ Orbital Parameters", "📡 Communications"])
+    
     with tab1:
         col1, col2 = st.columns(2)
 
