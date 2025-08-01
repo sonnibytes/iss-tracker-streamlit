@@ -285,3 +285,32 @@ def main():
             )
             fig_efficiency.update_traces(line_color='green')
             st.plotly_chart(fig_efficiency, use_container_width=True)
+        
+    with tab2:
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Altitude variations
+            fig_alt = px.line(
+                hist_data,
+                x='timestamp',
+                y='altitude_km',
+                title='Altitude Variations',
+                labels={'altitude_km': 'Altitude (km)', 'timestamp': 'Date'}
+            )
+            fig_alt.update_traces(line_color='blue')
+            st.plotly_chart(fig_alt, use_container_width=True)
+        
+        with col2:
+            # Velocity Tracking
+            fig_vel = px.line(
+                hist_data,
+                x='timestamp',
+                y='velocity_kmh',
+                title='Velocity Tracking',
+                labels={'velocity_kmh': 'Velocity (km/h)', 'timestamp': 'Date'}
+            )
+            fig_vel.update_traces(line_color='purple')
+            st.plotly_chart(fig_vel, use_container_width=True)
+    
+    
