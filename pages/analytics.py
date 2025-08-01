@@ -75,3 +75,61 @@ def get_extended_iss_data():
         return None
 
 
+def generate_orbital_path(current_lat, current_lng, hours_ahead=2):
+    """Generate predicted orbital path for visualization"""
+    # This is a simplified simulation - real orbital mechanics are much more complex
+    path_points = []
+
+    # ISS orbital period is about 93 minutes
+    orbital_period_hours = 1.55
+    points_per_orbit = 50
+    total_points = int((hours_ahead / orbital_period_hours) * points_per_orbit)
+
+    for i in range(total_points):
+        # Simple simulation: ISS moves roughly 15.5 degrees per hour in longitude
+        time_offset = (i / points_per_orbit) * orbital_period_hours
+
+        # Simulate longitude movement (eastward)
+        new_lng = current_lng + (time_offset * 15.5)
+        if new_lng > 180:
+            new_lng -= 360
+        
+        # Simulate latitude oscillation (between +51.6 and -51.6 degrees)
+        lat_amplitude = 51.6
+        lat_frequency = 2 + np.pi / orbital_period_hours
+        new_lat = lat_amplitude * np.sin(lat_frequency * time_offset)
+
+        path_points.append({
+            'lat': new_lat,
+            'lng': new_lng,
+            'time_hours': time_offset,
+            'timestamp': datetime.now() + timedelta(hours=time_offset)
+        })
+    
+    return path_points
+
+
+def generate_historical_data(days_back=7):
+    """Generate simulated historical ISS data"""
+    np.random.seed(42)  # For reproducible "historical" data
+
+    dates = pd.date_range(
+        start=datetime.now() - timedelta(days=days_back),
+        end=datetime.now(),
+        freq='H'
+    )
+
+    historical_data = []
+    for date in dates:
+        # Simulate varying metrics
+        historical_data.append({
+            'timestamp': date,
+            'altitude_km': 408 + np.random.normal(0, 5),
+            'velocity_kmh': 27580 + np.random.normal(0, 50),
+            'power_generation_kw': 90 + np.random.normal(0, 15),
+            'solar_panel_efficiency': 85 + np.random.normal(0, 8),
+            'communication_strength': np.random.uniform(70, 100),
+            'crew_activity_level': np.random.choice(['Low', 'Medium', 'High']),
+        })
+    
+    return pd.DataFrame(historical_data)
