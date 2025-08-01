@@ -248,6 +248,38 @@ def main():
             help="Angular distance from your location"
         )
     
+    # ISS World Map
+    st.subheader("Live ISS Position")
+
+    # Create map data
+    map_data = pd.DataFrame({
+        'lat': [iss_location['latitude'], user_lat],
+        'lon': [iss_location['longitude'], user_lng],
+        'name': ['🛰️ ISS', '📍 You'],
+        'size': [20, 15]
+    })
+
+    # Create plotly map
+    fig = px.scatter_mapbox(
+        map_data,
+        lat="lat",
+        lon='"lon',
+        hover_name="name",
+        size="size",
+        zoom=1,
+        mapbox_style="open-street-map",
+        height=400
+    )
+
+    fig.update_layout(
+        margin={"r":0, "t":0, "l":0, "b":0},
+        mapbox=dict(
+            center=dict(lat=iss_location['latitude'], lon=iss_location['longitude'])
+        )
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
     
 
 
