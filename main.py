@@ -135,5 +135,28 @@ def get_sunrise_sunset(lat, lng):
         return None
 
 
+def is_iss_nearby(iss_lat, iss_lng, user_lat, user_lng, tolerance=5):
+    """Check if ISS is nearby user location"""
+    return (math.isclose(iss_lat, user_lat, abs_tol=tolerance) and math.isclose(iss_lng, user_lng, abs_tol=tolerance))
+
+
+def is_nighttime(sunrise_sunset_data):
+    """Check if it's currently nighttime"""
+    if not sunrise_sunset_data:
+        return False
+    
+    now = datetime.now(sunrise_sunset_data['sunrise'].tzinfo)
+    sunrise = sunrise_sunset_data['sunrise']
+    sunset = sunrise_sunset_data['sunset']
+
+    # If sunset is after sunrise (normal day)
+    if sunset > sunrise:
+        return now < sunrise or now > sunset
+    # If sunset is before sunrise (crosses midnight)
+    else:
+        return now > sunset and now < sunrise
+
+
+
 
 
