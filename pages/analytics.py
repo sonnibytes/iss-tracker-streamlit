@@ -313,4 +313,28 @@ def main():
             fig_vel.update_traces(line_color='purple')
             st.plotly_chart(fig_vel, use_container_width=True)
     
+    with tab3:
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Communication strength
+            fig_comm = px.line(
+                hist_data,
+                x='timestamp',
+                y='communication_strength',
+                title='Communication Signal Strength',
+                labels={'communication_strength': 'Signal Strength (%)', 'timestamp': 'Date'}
+            )
+            fig_comm.update_traces(line_color='red')
+            st.plotly_chart(fig_comm, use_container_width=True)
+        
+        with col2:
+            # Crew activity levels
+            activity_counts = hist_data['crew_activity_level'].value_counts()
+            fig_activity = px.pie(
+                values=activity_counts.values,
+                names=activity_counts.index,
+                title='Crew Activity Distribution (7 days)'
+            )
+            st.plotly_chart(fig_activity, use_container_width=True)
     
