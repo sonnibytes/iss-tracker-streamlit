@@ -213,7 +213,7 @@ def main():
             fig = go.Figure()
 
             # Add orbital path
-            fig.add_trace(go.Scattermapbox(
+            fig.add_trace(go.Scattermap(
                 lat=path_df['lat'],
                 lon=path_df['lng'],
                 mode='lines+markers',
@@ -228,7 +228,7 @@ def main():
 
             # Add current position
             if show_current_pos:
-                fig.add_trace(go.Scattermapbox(
+                fig.add_trace(go.Scattermap(
                     lat=[iss_data['latitude']],
                     lon=[iss_data['longitude']],
                     mode='markers',

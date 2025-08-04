@@ -61,7 +61,7 @@ def get_iss_location():
         data = response.json()
 
         # DEBUG
-        print(data)
+        # print(data)
 
         return {
             'latitude': float(data["iss_position"]["latitude"]),
@@ -89,32 +89,11 @@ def get_astronauts():
         return None
 
 
-@st.cache_data(ttl=3600, show_spinner=False)  # Cache for 1h
-def get_iss_passes(lat, lng, alt=0, n=5):
-    """Get upcoming ISS passes for a location"""
-    try:
-        url = "http://api.open-notify.org/iss-pass.json"
-        params = {
-            'lat': lat,
-            'lon': lng,
-            'alt': alt,
-            'n': n
-        }
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-
-        passes = []
-        for pass_info in data['response']:
-            passes.append({
-                'date': datetime.fromtimestamp(pass_info['risetime']),
-                'duration': pass_info['duration']
-            })
-
-        return passes
-    except Exception as e:
-        st.error(f"Error fetching pass data: {e}")
-        return []
+# Note: ISS pass predictions API has been discontinued by Open Notify
+# We'll keep this function for potential future alternative APIs
+def get_iss_passes_placeholder(lat, lng):
+    """Placeholder for pass predictions - API discontinued"""
+    return []
 
 
 def get_sunrise_sunset(lat, lng):
@@ -267,27 +246,28 @@ def main():
     map_data = pd.DataFrame({
         'lat': [iss_location['latitude'], user_lat],
         'lon': [iss_location['longitude'], user_lng],
-        'name': ['🛰️ ISS', '📍 You'],
+        'name': ['ISS', 'You'],
         'size': [20, 15]
     })
 
-    # Create plotly map
+    # # Create plotly map
     fig = px.scatter_map(
-        map_data, 
+        map_data,
         lat="lat", 
         lon="lon", 
         hover_name="name",
         size="size",
         zoom=1,
-        # mapbox_style="open-street-map",
-        height=400
+        height=400,
+        custom_data="name"
+        
     )
 
     fig.update_layout(
         margin={"r":0, "t":0, "l":0, "b":30},
         mapbox=dict(
             center=dict(lat=iss_location['latitude'], lon=iss_location['longitude'])
-        )
+        ),
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -326,25 +306,37 @@ def main():
             st.write(f"Sunrise: {sun_data['sunrise'].strftime('%I:%M %p')}")
             st.write(f"Sunset: {sun_data['sunset'].strftime('%I:%M %p')}")
     
-    # Upcoming passes
+    # Upcoming passes - API Discontinued
     st.subheader("Upcoming ISS Passes")
 
-    passes = get_iss_passes(user_lat, user_lng)
-    if passes:
-        pass_data = []
-        for i, pass_info in enumerate(passes):
-            pass_data.append({
-                'Pass #': i + 1,
-                'Date': pass_info['date'].strftime('%Y-%m-%d'),
-                'Time': pass_info['date'].strftime('%I:%M %p'),
-                'Duration': f"{pass_info['duration'] // 60}m {pass_info['duration'] % 60}s",
-                'Days Away': (pass_info['date'].date() - datetime.now().date()).days
-            })
+    st.info("""
+    🚧 **Feature Update**: The Open Notify API discontinued their pass prediction service in 2024.
+    
+    **Alternative Solutions:**
+    - Visit [Heavens Above](https://www.heavens-above.com/) for accurate pass predictions
+    - Use [Spot the Station](https://spotthestation.nasa.gov/) by NASA
+    - Check [ISS Tracker](https://www.isstracker.com/) for pass times
+    
+    These sites provide detailed visibility forecasts including exact times, direction, and brightness!
+    """)
+    
+    # Show User location for reference
+    st.write(f"📍 **Your Location**: {user_lat:.4f}°, {user_lng:.4f}°")
+    
+    with st.expander("🔧 Technical Note for Developers"):
+        st.write("""
+        **API Evolution Challenge**: This is a great example of why robust error handling 
+        and graceful degradation are crucial in real-world applications.
         
-        df_passes = pd.DataFrame(pass_data)
-        st.dataframe(df_passes, use_container_width=True)
-    else:
-        st.warning("Unable to fetch pass prediction data")
+        **Original Implementation**: Used `api.open-notify.org/iss-pass.json`
+        **Status**: Discontinued in 2024
+        **Fallback Strategy**: Provide alternative resources and maintain core functionality
+        
+        **Lessons Learned**: 
+        - Always have backup plans for third-party dependencies
+        - Monitor API status and deprecation notices
+        - Design with graceful degradation in mind
+        """)
     
     # Current Astronauts
     if astronaut_data and astronaut_data['astronauts']:
@@ -361,16 +353,22 @@ def main():
                 st.write(f"• {astronaut['name']}")
 
     # Technical Details
-    with st.expander("Technical Information"):
+    with st.expander("🔧 Technical Information"):
         st.write("**Data Sources:**")
-        st.write("• ISS Position: Open Notify API")
-        st.write("• Sunrise/Sunset: Sunrise-Sunset API")
-        st.write("• Astronaut Data: Open Notify API")
+        st.write("• ISS Position: Open Notify API ✅")
+        st.write("• Sunrise/Sunset: Sunrise-Sunset API ✅") 
+        st.write("• Astronaut Data: Open Notify API ✅")
+        st.write("• ~~Pass Predictions: Open Notify API~~ ❌ (Discontinued 2024)")
         st.write("")
         st.write("**Update Frequency:**")
         st.write("• ISS Position: Every 60 seconds")
         st.write("• Astronaut Data: Every hour")
-        st.write("• Pass Predictions: Every hour")
+        st.write("• Sunrise/Sunset: Every hour")
+        st.write("")
+        st.write("**API Status & Reliability:**")
+        st.write("• Open Notify APIs are free and community-maintained")
+        st.write("• Pass prediction service was discontinued in 2024")
+        st.write("• This showcases the importance of graceful error handling!")
         st.write("")
         st.write(f"**Last Updated:** {iss_location['timestamp'].strftime('%Y-%m-%d %H:%M:%S UTC')}")
 
