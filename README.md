@@ -17,6 +17,6 @@
  3. Run the app: `streamlit run main.py`
  
  ## Live Demo
- [Deploy to Streamlit Cloud for easy sharing]
+ [ISS Real-Time Tracker](https://iss-tracker-and-analytics.streamlit.app/)
  
  Built with ❤️ for the AURA Portfolio Project
